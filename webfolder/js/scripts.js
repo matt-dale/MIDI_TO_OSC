@@ -306,6 +306,23 @@ async function receive_mapped_midi_notes(){
         return n
 }
 
+async function get_midi_osc_indicators(){
+    let midi_osc = await eel.get_midi_osc_status()()
+    if (midi_osc[0] == true){
+        
+        $('#midi_indicator').css('background-color', '#2e8734')
+    }
+    else {
+        $('#midi_indicator').css('background-color', '#bbb')
+    }
+    if (midi_osc[1] == true){
+        $('#osc_indicator').css('background-color', '#2e8734')
+    }
+    else {
+        $('#osc_indicator').css('background-color', '#bbb')
+    }
+}
+
 var interval, 
     time = 250
 
@@ -317,7 +334,7 @@ $(document).ready(function(){
             eel.save_JSON_file()
             $(this).removeClass('btn-danger').addClass('btn-success').html('RUNNING...')
             RUNNING_VAR = 'RUNNING'
-            interval = setInterval( receive_mapped_midi_notes, time );
+            interval = setInterval(get_midi_osc_indicators, time );
         }
         else {
             RUNNING_VAR = 'STOPPED'

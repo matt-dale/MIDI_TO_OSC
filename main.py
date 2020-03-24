@@ -15,6 +15,7 @@ from pythonosc import udp_client, osc_message_builder
 
 RUN_VAR = queue.Queue(maxsize=1)
 MIDI_MESSAGE_Q = queue.Queue(maxsize=1)
+OSC_q = queue.Queue()
 
 log_level = logging.DEBUG
 
@@ -74,6 +75,33 @@ def return_midi_note():
     else:
         return 
 
+@eel.expose
+def return_osc_message():
+    """
+    every time this is called it returns whatever's in the OSC q
+    """
+    if not OSC_q.empty():
+        x = OSC_q.get()
+        return x
+    else:
+        return 
+
+@eel.expose
+def get_midi_osc_status():
+    """
+    used to turn the indicators on
+    """
+    osc = False
+    midi = False
+    if not OSC_q.empty():
+        osc = True
+        with OSC_q.mutex:
+            OSC_q.queue.clear()
+    if not MIDI_MESSAGE_Q.empty():
+        midi = True
+        with MIDI_MESSAGE_Q.mutex:
+            MIDI_MESSAGE_Q.queue.clear()
+    return osc, midi
 
 def is_int(s):
     """
@@ -133,13 +161,12 @@ def send_osc_message(ip_address, port, address, args):
                 msg.add_arg(int(arg))
             else:
                 msg.add_arg(arg)
-    print('osc args: {0}'.format(msg.args))
     msg = msg.build()
-    
     client.send(msg)
-    #client.send_message(address, args)
-    logging.info('sent {0} {1} to {2}:{3}'.format(address, args, ip_address, port))
-    return 'sent {0} {1} to {2}:{3}'.format(address, args, ip_address, port)
+    string_msg = 'sent {0} {1} to {2}:{3}'.format(address, args, ip_address, port)
+    logging.info(string_msg)
+    OSC_q.put(string_msg)
+    return string_msg
 
 
 def start_the_listener(settings_dict, q):
@@ -152,7 +179,8 @@ def start_the_listener(settings_dict, q):
         return {'type':'error opening port'}
     while not q.qsize() == 0:
         for msg in midi_port:
-            print(msg)
+            if MIDI_MESSAGE_Q.empty():
+                MIDI_MESSAGE_Q.put(msg)
             compare_midi_note_to_settings_and_send_OSC(settings_dict, msg)
             if q.qsize() == 0:
                 break
@@ -214,7 +242,6 @@ def compare_midi_note_to_settings_and_send_OSC(settings_dict, note):
                     SEND_OSC = True
                 if SEND_OSC == True:
                     # send OSC!
-                    MIDI_MESSAGE_Q.put(midi_settings)
                     _ip = osc_settings['target_ip'].split(':')
                     ip_address = _ip[0]
                     port = _ip[1]
@@ -309,6 +336,7 @@ def listen_on_midi_port():
         test = midi_port.poll()
         if test:
             midi_message = midi_port.receive()
+            MIDI_MESSAGE_Q.put(midi_message)
             if logging.getLogger() == logging.DEBUG:
                 print(midi_message)
         gevent.sleep(0.25)
