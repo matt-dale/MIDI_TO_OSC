@@ -1,0 +1,226 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>MIDI/OSC Translator</title>
+  <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="css/fontawesome/css/all.css" rel="stylesheet">
+  <link href="css/nouislider.min.css" rel="stylesheet">
+  <script type="text/javascript" src="js/jquery.js"></script>
+
+
+</head>
+
+<body>
+    <script type="text/javascript" src="/eel.js"></script>
+    <script src="js/scripts.js"></script>
+    <div class="modal" tabindex="-1" role="dialog" id="myModal">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+
+              <h4 class="modal-title">Introduction</h4>
+            </div>
+            <div class="modal-body">
+              <p>This configuration app is designed to map an incoming MIDI signal to an outgoing OSC address.  
+                  It is meant to be used one-to-many, meaning that one MIDI device will send OSC commands to multiple IP Addresses.
+              </p>
+              <ol>
+                  <li>Select your MIDI device (the program won't work without one!) in the menu bar</li>
+                  <li>Click the Add a Mapping button</li>
+                  <li>Click the LISTEN FOR MIDI Button and trigger the MIDI event on the MIDI device</li>
+                  <li>Input the Target OSC Device's IP Address and Port</li>
+                  <li>Enter the OSC command that you want to be sent when that MIDI message is received</li>         
+                  <li>Click the Add a Mapping button for as many commands you want to have translated</li>
+              </ol>
+              <p>
+                  Matt Dale built this app for fun and there are probably a lot of quirks and bugs.  Please email him if there are any issues to fix. 
+                </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-inverse btn-warning" data-dismiss="modal">Got It!</button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div><!-- /.modal -->
+
+    <nav class="navbar navbar-dark bg-dark">
+      <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">MIDI to OSC CONVERTER</a>
+            </a>
+        </div><!-- end navbar brand -->
+       <div class="col-md-3">
+          <form class="navbar-form navbar-left form-inline">
+            <div class="form-group">
+                <label class="control-label navbar-text" for="midi_select">MIDI Device: </label>
+            
+                <select class="form-control" id="midi_select">
+                    
+                </select>
+            </div>
+          </form>
+          </div>
+          <div class="col-md-3">
+            <form class="navbar-form navbar-left form-inline">
+              <div class="form-group">
+            <label>My IP Address is :</label><span id="ip_address"></span>
+              </div>
+          </form>
+          </div>
+          <!--<div class="col-md-3">
+              <form class="navbar-form navbar-right form-inline">
+                  <div class="form-group">
+                      <label for="target_osc" class="control-label navbar-text">
+                          Target OSC IP Address: 
+                      </label>
+                      <input type="text" class="form-control" id="target_osc" placeholder="ex:192.168.1.20:8080">
+                  </div>
+              </form>
+          </div>-->
+      </div><!-- end container fluid -->
+    </nav>
+<div class="container-fluid">
+<div class="row" style="margin-top: 2%;">
+    <div class="col-md-3">
+        <button class="btn btn-inverse btn-success btn-lg" id="add_mapping_row"><i class="fa fa-plus"></i> Add a Mapping</button>
+    </div>
+    <div class="col-md-3"><button class="btn btn-inverse btn-danger btn-lg" id="run"><i class="fa fa-play-circle"></i> RUN!</button></div>
+</div>
+
+<div class="row" style="margin-top:1%;">
+
+
+<table id="mappings_table" class="table table-bordered table-inverse">
+  <thead>
+    <tr>
+      <th>Learn MIDI Command</th>
+      <th>MIDI Message Type</th>
+      <th>MIDI Message (click to edit values)</th>
+      <th>OSC Mapping</th>
+      <th></th>
+    <tr>
+  </thead>
+  <tbody>
+      <tr id="row_template" style="display:none;">
+        <td class="text-center"><button class="btn btn-danger midi_listen"><i class="fa fa-microphone"></i></button></td>
+        <td><select class="form-control midi_type">
+          <option value="note_on">Note On</option>
+          <option value="note_off">Note Off</option>
+          <option value="control_change">Control Change</option>
+          <option value="pitchwheel">Pitch Bend</option>
+          <option value="program_change">Program Change</option>
+        </select></td>
+        <td>
+          <table class="table table-striped midi_message_contents">
+            <thead></thead>
+            <tbody>
+              <tr>
+                <td>channel</td>
+                <td contenteditable="true" class="channel"></td>
+            </tr>
+            <tr>
+                <td>note</td>
+                <td contenteditable="true" class="note"></td>
+            </tr>
+            <tr>
+                <td>velocity</td>
+                <td contenteditable="true" class="velocity"></td>
+            </tr>
+            <tr>
+                <td>control</td>
+                <td contenteditable="true" class="control"></td>
+            </tr>
+            <tr>
+                <td>program</td>
+                <td contenteditable="true" class="program"></td>
+            </tr>
+            <tr>
+                <td>value</td>
+                <td contenteditable="true" class="value"></td>
+            </tr>
+            <tr>
+                <td>data</td>
+                <td contenteditable="true" class="data"></td>
+            </tr>
+            <tr>
+                <td>pitch</td>
+                <td contenteditable="true" class="pitch"></td>
+            </tr>
+            </tbody>
+    </table>
+        </td>
+        <td><button class="btn btn-success add_osc_map"> OSC route</button>
+          <div class="modal osc_route_modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg " role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">OSC Details</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                  <form class="form col-md-6">
+                      <label>Target Device IP Address:Port:</label>
+                      <input type="text" class="form-control target_ip_address" placeholder="ex: 192.168.2.1:7777">
+                    
+                        <label>OSC Address:</label>
+                        <input type="text" class="form-control osc_address" placeholder="ex: /slide_change">
+                      
+                      <label>OSC Args:</label>
+                      <input type="text" class="form-control osc_args" placeholder="ex: 1">
+
+                      <!-- hide or show, depending on midi note tyoe -->
+                      <div class="limit_mapping_div">
+                        <p class="MIDI_note_description"></p>
+                        <label>Upper MIDI Value</label>
+                        <input type="text" class="form-control midi_upper_value">
+                        <label>Lower MIDI Value</label>
+                        <input type="text" class="form-control midi_lower_value">
+                        <label>Upper OSC Value</label>
+                        <input type="text" class="form-control osc_upper_value">
+                        <label>Lower OSC Value</label>
+                        <input type="text" class="form-control osc_lower_value">
+                      </div>
+                    
+                  </form>
+                  <div class="col-md-6">
+                    <button class="btn btn-success btn-lg osc_tester" style="margin-top:3%;">TEST OSC MESSAGE</button>
+                      <div class="alert alert-info osc_test_results" role="alert">
+                        
+                      </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        
+        </td>
+        <td><button class="btn btn-danger remove_row"><i class="fa fa-window-close"></i></button></td>
+      </tr>
+  </tbody>
+
+</table>
+
+
+</div>
+</div>
+
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('#myModal').modal()
+    });
+</script>
+
+
+</body>
+</html>
