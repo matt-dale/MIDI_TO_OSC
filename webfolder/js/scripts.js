@@ -10,9 +10,9 @@ if (a < b) {
 }
 
 
-console.log("Calling Python from Javascript...");
-eel.my_python_function(1, 2); // This calls the Python function that was decorated
-
+//console.log("Calling Python from Javascript...");
+//eel.my_python_function(1, 2); // This calls the Python function that was decorated
+/* end testing */
 
 async function get_ip(){
     let ip_addr = await eel.get_ip_address()()
@@ -80,15 +80,54 @@ var table =  `<table class="table table-striped midi_message_contents">
     return table
 }
 
-async function start_listening_on_midi_port(){
-    console.log('listening on port')
-    let n = await eel.listen_on_midi_port()();
+async function receive_listened_midi_note(){
+    let n = await eel.return_midi_note()()
+    console.log(n)
+    if (n.type != undefined){
+        channel = parseInt(n.channel) + 1
+        temp = `<p class="text-center">MIDI Received</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                Type
+                            </th>
+                            <th>
+                                Channel
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${n.type}</td>
+                            <td>${channel}</td>
+                        </tr>
+                    </tbody>
+                </table>`
+        $('#midi_message_deets').html(temp).removeClass('invisible')
+    }
+    else {
+        //$('#midi_message_deets').html('No message heard')
+    }
+}
+
+var midi_interval, time = 100
+
+function start_listening_on_midi_port(){
+    n = eel.listen_on_midi_port();  
+    midi_interval = setInterval(receive_listened_midi_note, time) //interval gets cleared in the get_heard_midi_message function
+    setTimeout(get_heard_midi_message, 7000)
+}
+
+
+async function get_heard_midi_message() {
+    //console.log('getting heard midi message')
+    let n = await eel.get_received_midi_message()() 
     $('.listening').parent().next().children().val(n.type)
     channel = n.channel + 1
-    //$('.listening').parent().next().next('td').html('<ul><li>channel: '+channel+'</li><li>note: '+n.note+'</li><li>velocity: '+n.velocity+'</li><li>control: '+n.control+'</li><li>program:'+n.program+'</li><li>value:'+n.value+'</li><li>data:'+n.data+'</li><li>pitch:'+n.pitch+'</li></ul>')
     table = render_midi_data(channel, n)
     $('.listening').parent().next().next('td').html(table);
-    console.log('midi message:'+n.type)
+
     $('#listening_note').remove()
     tds = $('.midi_message_contents tr>td')
     $.each(tds, function(i, val){
@@ -96,10 +135,10 @@ async function start_listening_on_midi_port(){
             $(this).closest('tr').remove()
         }
     })
+    clearInterval(midi_interval)
     $('.midi_listen').removeClass('invisible listening').addClass('btn-warning')
-    return n
+    $('#midi_message_deets').html('').addClass('invisible')
 }
-
 
 eel.expose(get_selected_port);
 function get_selected_port(){
@@ -216,8 +255,16 @@ function add_mapping_row(){
         midi_type = $(this).parent().parent().find('.midi_type').val()
         values_div = $(this).parent().find('.limit_mapping_div')
         if (midi_type == 'control_change' || midi_type == 'pitchwheel'){
+            if (midi_type == 'pitchwheel'){
+                text = `The MIDI pitch wheel values start at 0 and end at 16,384. Please enter the min and max OSC values you want these MIDI values mapped to.
+                The MIDI input will be converted to a percentage of the given OSC Range.`
+            }
+            else {
+                text = `The MIDI control change values start at 0 and end at 127. Please enter the min and max OSC values you want these MIDI values mapped to.
+                The MIDI input will be converted to a percentage of the given OSC Range.`
+            }
             values_div.show()
-            values_div.find('.MIDI_note_description').html('The MIDI control change values start at 0 and end at 127. Please enter the minimum OSC value and the max OSC value you want these MIDI values mapped to.')
+            values_div.find('.MIDI_note_description').html(text)
             values_div.find('.midi_upper_value').val('127')
             values_div.find('.midi_lower_value').val('0')
         }
@@ -254,6 +301,62 @@ function setup_tester_buttons(){
     });// end osc tester click
 } // end setup tester function 
 
+
+async function get_midi_osc_indicators(){
+    let midi_osc = await eel.get_midi_osc_status()()
+    console.log(midi_osc)
+    if (midi_osc[1] == true){
+        
+        $('#midi_indicator').css('background-color', '#2e8734')
+    }
+    else {
+        $('#midi_indicator').css('background-color', '#bbb')
+    }
+    if (midi_osc[0] == true){
+        $('#osc_indicator').css('background-color', '#2e8734')
+    }
+    else {
+        $('#osc_indicator').css('background-color', '#bbb')
+    }
+}
+
+var interval, 
+    time = 100
+
+$(document).ready(function(){
+    listen_click_handler()
+    template = $('#row_template').html()
+    
+    $('#run').click(function(){
+        if ($(this).hasClass('btn-danger')){
+            eel.toggle_run()
+            eel.save_JSON_file()
+            eel.start_midi_osc_conversion()
+            $(this).removeClass('btn-danger').addClass('btn-success').html('RUNNING...')
+            RUNNING_VAR = 'RUNNING'
+            interval = setInterval(get_midi_osc_indicators, time );
+        }
+        else {
+            eel.toggle_run()
+            eel.save_JSON_file()
+            RUNNING_VAR = 'STOPPED'
+            clearInterval( interval );
+            $(this).addClass('btn-danger').removeClass('btn-success').html('<i class="fa fa-play-circle"></i> RUN!')
+        }
+        //eel.toggle_run()
+
+    });
+    $('#add_mapping_row').click(function(){
+        add_mapping_row()
+        setup_tester_buttons()
+    });
+    get_midi_ports_from_python()
+    check_for_saved_file()
+}); // end doc ready
+
+
+/*
+// deprecated due to performance issues
 function compare_note_object_to_rows(note_obj){
     // return the row that contains the note_obj or return false
     return_row = false
@@ -291,6 +394,7 @@ function compare_note_object_to_rows(note_obj){
     return return_row
 }
 
+// this function is deprecated
 async function receive_mapped_midi_notes(){
         let n = await eel.return_midi_note()()
         if (n !== null){
@@ -305,49 +409,4 @@ async function receive_mapped_midi_notes(){
 
         return n
 }
-
-async function get_midi_osc_indicators(){
-    let midi_osc = await eel.get_midi_osc_status()()
-    if (midi_osc[0] == true){
-        
-        $('#midi_indicator').css('background-color', '#2e8734')
-    }
-    else {
-        $('#midi_indicator').css('background-color', '#bbb')
-    }
-    if (midi_osc[1] == true){
-        $('#osc_indicator').css('background-color', '#2e8734')
-    }
-    else {
-        $('#osc_indicator').css('background-color', '#bbb')
-    }
-}
-
-var interval, 
-    time = 250
-
-$(document).ready(function(){
-    listen_click_handler()
-    template = $('#row_template').html()
-    $('#run').click(function(){
-        if ($(this).hasClass('btn-danger')){
-            eel.save_JSON_file()
-            $(this).removeClass('btn-danger').addClass('btn-success').html('RUNNING...')
-            RUNNING_VAR = 'RUNNING'
-            interval = setInterval(get_midi_osc_indicators, time );
-        }
-        else {
-            RUNNING_VAR = 'STOPPED'
-            clearInterval( interval );
-            $(this).addClass('btn-danger').removeClass('btn-success').html('<i class="fa fa-play-circle"></i> RUN!')
-        }
-        eel.toggle_run()
-
-    });
-    $('#add_mapping_row').click(function(){
-        add_mapping_row()
-        setup_tester_buttons()
-    });
-    get_midi_ports_from_python()
-    check_for_saved_file()
-}); // end doc ready
+*/

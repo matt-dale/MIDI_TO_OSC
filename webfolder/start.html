@@ -91,6 +91,7 @@
 <div class="row" style="margin-top: 2%;">
     <div class="col-md-3">
         <button class="btn btn-inverse btn-success btn-lg" id="add_mapping_row"><i class="fa fa-plus"></i> Add a Mapping</button>
+        <div class="alert alert-dark heard_midi_note_value invisible" role="alert" id="midi_message_deets"></div>
     </div>
     <div class="col-md-3"><button class="btn btn-inverse btn-danger btn-lg" id="run"><i class="fa fa-play-circle"></i> RUN!</button></div>
 </div>
@@ -182,10 +183,12 @@
                       <!-- hide or show, depending on midi note tyoe -->
                       <div class="limit_mapping_div">
                         <p class="MIDI_note_description"></p>
-                        <label>Upper MIDI Value</label>
-                        <input type="text" class="form-control midi_upper_value">
-                        <label>Lower MIDI Value</label>
-                        <input type="text" class="form-control midi_lower_value">
+                        <div class="invisible">
+                          <label>Upper MIDI Value</label>
+                          <input type="text" class="form-control midi_upper_value">
+                          <label>Lower MIDI Value</label>
+                          <input type="text" class="form-control midi_lower_value">
+                      </div>
                         <label>Upper OSC Value</label>
                         <input type="text" class="form-control osc_upper_value">
                         <label>Lower OSC Value</label>
