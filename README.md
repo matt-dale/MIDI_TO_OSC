@@ -32,8 +32,7 @@ Extract the folder and run "main.exe" inside the main folder.  This distribution
 
 ## Testing from source/app design
 The app is written in Python and JavaScript/HTML, using the Python library Eel which launches a Google Chrome standalone browser window and communicates to the Python code to handle i/o. 
-If you want to test it out in Python or work on the codebase:
-0. Make sure you have Chrome installed
+If you want to test it out in Python or work on the codebase, first make sure you have Chrome installed
 1. Create a virtualenvironment 
 2. Clone this repository
 3. Install requirements.txt (`pip install ./requirements.txt`)
