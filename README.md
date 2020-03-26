@@ -12,6 +12,10 @@ This app was designed to work with LightJams, ETC Sound2Light and LightFom with 
 ## Prerequisites
 A Windows 10 PC with Google Chrome installed, some sort of MIDI interface (an internal Loopback interface, or a USB MIDI interface), and a working network is required to use the app.
 
+## Download and install
+The current release is v2.0.0-beta and needs testing.  Please download the zipped v2-beta.zip from the releases page. https://github.com/matt-dale/MIDI_TO_OSC/releases 
+Extract the folder and run "main.exe" inside the main folder.  This distribution is a debug version which displays a command line window behind the app displaying any errors that may have occurred. 
+
 ## Typical workflow
 The app boots up and displays some basic instructions then displays either a blank MIDI Message table, or a filled in one based on the last time you used the app. The user can add or edit this table using the various controls: Add a Mapping, OSC Details, or changing the MIDI Message type, or editing the MIDI Message table. Adding a row to the table with the Add a Mapping button supplies a "Learn MIDI Command" button.  When this button is pressed, the app listens on the MIDI port for messages and displays the last received message in a box under the Add a Mapping button.  After a 7 second listening window, the app automatically inserts the last received MIDI message into the MIDI message table. This "Learn MIDI Command" is helpful for those users that aren't familiar with manually entering MIDI details. 
 
@@ -25,10 +29,6 @@ If the corresponding MIDI message type is either Control Change or Pitch Bend, t
 Once everything is entered and tested, click the RUN! button.  At this point, the app goes to work.  There are Incoming MIDI and Outgoing OSC indicators to let you know that the app is working for help with troubleshooting. 
 
 If you'd like to save the current mapping to a file and create a new one, simply go into the folder where the app is run from and rename the midi_osc_settings.json file to something else.  Then when you want to use that mapping again in the future, rename it to midi_osc_settings.json and the app will load it. 
-
-## Download and install
-The current release is v2.0.0-beta and needs testing.  Please download the zipped v2-beta.zip from the releases page. https://github.com/matt-dale/MIDI_TO_OSC/releases 
-Extract the folder and run "main.exe" inside the main folder.  This distribution is a debug version which displays a command line window behind the app displaying any errors that may have occurred. 
 
 ## Testing from source/app design
 The app is written in Python and JavaScript/HTML, using the Python library Eel which launches a Google Chrome standalone browser window and communicates to the Python code to handle i/o. 
