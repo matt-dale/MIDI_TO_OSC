@@ -69,6 +69,7 @@ def get_midi_ports():
 def js_osc_tester(ip_address, port, address, args):
     """
     """
+    logging.debug('sending message from JS, probably the TEST OSC MESSAGE button')
     x = send_osc_message(ip_address, port, address, args)
     return x 
 
@@ -189,16 +190,16 @@ def compare_midi_note_to_settings_and_send_OSC(settings_dict, note):
     then send the corresponding OSC message if it should
     """
     note_type = note.type
-    SEND_OSC = False
     if note_type in settings_dict:
         # check the MIDI channel
         for setting_pair in settings_dict[note_type]:
+            SEND_OSC = False
             midi_settings = setting_pair[0]
             osc_settings = setting_pair[1]
             # channel check
             if int(midi_settings['channel'])-1 == note.channel:
                 if note_type in ['note_on', 'note_off']:
-                    logging.debug("note on or note off found")
+                    logging.debug("note on or note off found, {0}:{1}:{2}".format(note.type,note.note, note.velocity))
                     # note check
                     if midi_settings['note'] == str(note.note):
                         logging.debug('correct note found, sending OSC now!')
@@ -291,6 +292,7 @@ def start_the_listener(settings_dict):
         #print(str(RUN_VAR.empty()) + str(iter))
         #iter += 1
         msg = midi_port.poll()
+        
         if msg:
             if MIDI_MESSAGE_Q.empty():
                 MIDI_MESSAGE_Q.put(msg)
