@@ -243,37 +243,41 @@ async function send_osc_message(ip, port, address, args, result_div){
 }
 
 function add_mapping_row(){
-    $('#mappings_table').append("<tr class='map_row'>"+template+"</tr>")
-    listen_click_handler()
-    $('.remove_row').click(function(){
-        $(this).parent().parent().remove()
-    });
-    $('.add_osc_map').on("mouseup",function(){
-        modal = $(this).parent().find('.osc_route_modal')   
-        modal.modal()
-        // get midi type
-        midi_type = $(this).parent().parent().find('.midi_type').val()
-        values_div = $(this).parent().find('.limit_mapping_div')
-        if (midi_type == 'control_change' || midi_type == 'pitchwheel'){
-            if (midi_type == 'pitchwheel'){
-                text = `The MIDI pitch wheel values start at 0 and end at 16,384. Please enter the min and max OSC values you want these MIDI values mapped to.
-                The MIDI input will be converted to a percentage of the given OSC Range.`
+    if (RUNNING_VAR == 'RUNNING'){
+        alert('System is running, stop it frist to make any changes.')
+    }
+    else {
+        $('#mappings_table').append("<tr class='map_row'>"+template+"</tr>")
+        listen_click_handler()
+        $('.remove_row').click(function(){
+            $(this).parent().parent().remove()
+        });
+        $('.add_osc_map').on("mouseup",function(){
+            modal = $(this).parent().find('.osc_route_modal')   
+            modal.modal()
+            // get midi type
+            midi_type = $(this).parent().parent().find('.midi_type').val()
+            values_div = $(this).parent().find('.limit_mapping_div')
+            if (midi_type == 'control_change' || midi_type == 'pitchwheel'){
+                if (midi_type == 'pitchwheel'){
+                    text = `The MIDI pitch wheel values start at 0 and end at 16,384. Please enter the min and max OSC values you want these MIDI values mapped to.
+                    The MIDI input will be converted to a percentage of the given OSC Range.`
+                }
+                else {
+                    text = `The MIDI control change values start at 0 and end at 127. Please enter the min and max OSC values you want these MIDI values mapped to.
+                    The MIDI input will be converted to a percentage of the given OSC Range.`
+                }
+                values_div.show()
+                values_div.find('.MIDI_note_description').html(text)
+                values_div.find('.midi_upper_value').val('127')
+                values_div.find('.midi_lower_value').val('0')
             }
             else {
-                text = `The MIDI control change values start at 0 and end at 127. Please enter the min and max OSC values you want these MIDI values mapped to.
-                The MIDI input will be converted to a percentage of the given OSC Range.`
+                values_div.hide()
             }
-            values_div.show()
-            values_div.find('.MIDI_note_description').html(text)
-            values_div.find('.midi_upper_value').val('127')
-            values_div.find('.midi_lower_value').val('0')
-        }
-        else {
-            values_div.hide()
-        }
-        $('.osc_test_results').hide()
-
-    });// end map click
+            $('.osc_test_results').hide()
+        });// end map click
+    }
 }
 
 
@@ -333,12 +337,16 @@ $(document).ready(function(){
             eel.save_JSON_file()
             eel.start_midi_osc_conversion()
             $(this).removeClass('btn-danger').addClass('btn-success').html('RUNNING...')
+            $('#mappings_table').hide()
+            $('#add_mapping_row').addClass('disabled').addClass('btn-secondary').removeClass('btn-success')
             RUNNING_VAR = 'RUNNING'
             interval = setInterval(get_midi_osc_indicators, time );
         }
         else {
             eel.toggle_run()
             eel.save_JSON_file()
+            $('#mappings_table').show()
+            $('#add_mapping_row').removeClass('disabled').removeClass('btn-secondary').addClass('btn-success')
             RUNNING_VAR = 'STOPPED'
             clearInterval( interval );
             $(this).addClass('btn-danger').removeClass('btn-success').html('<i class="fa fa-play-circle"></i> RUN!')
