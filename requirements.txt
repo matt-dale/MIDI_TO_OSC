@@ -1,6 +1,6 @@
 ﻿altgraph==0.17
 backcall==0.1.0
-bottle==0.12.18
+bottle==0.12.19
 bottle-websocket==0.2.9
 cffi==1.14.0
 colorama==0.4.3
